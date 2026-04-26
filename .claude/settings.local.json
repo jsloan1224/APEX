@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh api *)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(curl -s \"https://raw.githubusercontent.com/jsloan1224/APEX/main/APEX_Phase1_ClaudeCode_Spec.md\" -o /tmp/apex_spec.md)",
+      "Read(//tmp/**)",
+      "Bash(curl -s \"https://raw.githubusercontent.com/jsloan1224/APEX/main/APEX_Phase1_ClaudeCode_Spec.md\")",
+      "Bash(pip --version)",
+      "Bash(git pull *)",
+      "Bash(pip install *)",
+      "Bash(python *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git reset *)"
+    ]
+  }
+}

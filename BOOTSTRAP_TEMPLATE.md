@@ -15,8 +15,8 @@ APEX project bootstrap.
 
 Repo: https://github.com/jsloan1224/APEX
 
-Clone with this PAT (regenerate per session):
-github_pat_PASTE_FRESH_TOKEN_HERE
+Clone with this PAT:
+<YOUR_GITHUB_PAT_HERE>
 
 After cloning, read these files in order before doing anything else:
 1. SESSION_HANDOFF.md  (entry point — points to the rest)
