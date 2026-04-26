@@ -1,6 +1,6 @@
 # BACKLOG.md
 **Open issues, deferred decisions, known limitations, technical debt.**
-**Last updated: April 26, 2026 | Phase 2 complete**
+**Last updated: April 26, 2026 | Phase 2 complete | Phase 3 spec written**
 
 This is the running list of things that are known but not blocking. New items added at the top of each section. When an item is resolved, move it to "Resolved" at the bottom of the file.
 
@@ -12,15 +12,6 @@ This is the running list of things that are known but not blocking. New items ad
 **Question:** Does the AI gate prompt need to know it's evaluating an index futures contract vs general "trade setup"?
 **Note:** Currently the prompt is instrument-agnostic. ES, NQ, and YM behave differently — NQ is more volatile, YM is slower. The prompt may produce better judgment if it knows which instrument it's evaluating beyond just the symbol string.
 **Recommendation:** Defer to Phase 5. Run with current prompt for first 30 trades, log scores, see if scores differ meaningfully across instruments. Tune only if data shows it matters.
-
-### B-006 — Validation prompt instrument-specific tuning
-**Question:** Does the AI gate prompt need to know it's evaluating an index futures contract vs general "trade setup"?
-**Note:** Currently the prompt is instrument-agnostic. ES, NQ, and YM behave differently — NQ is more volatile, YM is slower. The prompt may produce better judgment if it knows which instrument it's evaluating beyond just the symbol string.
-**Recommendation:** Defer to Phase 5. Run with current prompt for first 30 trades, log scores, see if scores differ meaningfully across instruments. Tune only if data shows it matters.
-
----
-
-## Deferred / Phase-Specific Items
 
 ### B-101 — Multi-instance support (deferred to "post-Phase 11")
 Running APEX for ES + NQ simultaneously requires two independent processes with two IBKR client IDs and two database paths. The current design supports only one instance per IBKR account. Not blocking; trivial to address with a `--instance-id` flag and per-instance config. Add when actually needed.
@@ -49,13 +40,6 @@ ES/NQ/YM real-time bars require a CME market data subscription on the IBKR accou
 
 ### B-204 — Single-broker lock-in
 Current design assumes IBKR. Switching to Tradovate, Rithmic, or others requires a new client wrapper module. Architecture supports this (broker is isolated to `core/ibkr_client.py` and `agents/execution_agent.py`) but adds work. Not a real limitation since IBKR is the chosen broker.
-
-### B-205 — Holiday calendar not implemented
-US market holidays (no trading) are not currently in the session clock. CME Globex still streams during some holidays but trade volume is meaningless. Phase 3 should include a holiday calendar check.
-
----
-
-## Technical Debt
 
 ### B-306 — `reqHistoricalData` blocks event loop during startup (Phase 3)
 `_start_subscriptions()` in `MarketDataAgent` calls `reqHistoricalData` (synchronous ib_insync call) inside an `async def` without `run_in_executor`. With 18 streams and a 2-day history load each, this blocks the asyncio event loop 18 times during startup. No crash in paper mode but will freeze the loop. Address when the full async event loop architecture is wired in Phase 3.
@@ -127,6 +111,9 @@ All resolved in v1.3 commit `2864cbc`.
 - B-005: Bar close time convention. IBKR open time + `timedelta(minutes=timeframe)` internally. UTC ISO 8601 output.
 - B-002 (spec approach): Written fresh, mirroring Phase 1 structure.
 - B-003 (smoke test): Confirmed passing by user — `python main.py` ran successfully on Windows box.
+
+### R-007 — B-205 Holiday calendar
+**Resolved 2026-04-26.** Holiday calendar (CME Globex observed holidays, Sat→Fri/Sun→Mon rules) addressed in Phase 3 spec. SessionClockAgent will implement computed holiday detection for 2025–2026.
 
 ### R-006 — B-202 News scraper sources
 **Resolved 2026-04-26.** User chose ForexFactory as the sole news source. Red-impact (High) USD events only. No secondary source needed. Spec written accordingly in APEX_Phase3_ClaudeCode_Spec.md using the ForexFactory JSON feed (nfs.faireconomy.media).
