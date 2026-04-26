@@ -9,6 +9,7 @@ from core.database import DatabaseManager
 EXPECTED_TABLES = {
     'signal_candidates', 'trades', 'system_events', 'news_events',
     'performance_daily', 'fvg_registry', 'key_levels', 'smt_events',
+    'historical_bars',
 }
 
 SIGNAL_CANDIDATES_REQUIRED_COLUMNS = {
@@ -51,7 +52,7 @@ def db(db_path):
 
 
 @pytest.mark.asyncio
-async def test_all_eight_tables_created(db):
+async def test_all_nine_tables_created(db):
     await db.init()
     all_tables = set(await db.get_tables())
     # Exclude SQLite internal tables (e.g. sqlite_sequence created by AUTOINCREMENT)

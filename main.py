@@ -10,6 +10,8 @@ from core.database import DatabaseManager
 from core.ibkr_client import IBKRClient, IBKRConnectionError
 from core.logger import configure_logging, get_logger
 from agents.risk_manager import KillSwitch
+from agents.market_data_agent import MarketDataAgent
+from core.bar_buffer import BufferManager
 
 VALID_INSTRUMENTS = {'ES', 'NQ', 'YM'}
 
@@ -98,6 +100,16 @@ async def run(args: argparse.Namespace):
             logger.error('IBKR connection failed: %s', exc)
             await db.log_event('IBKR_DISCONNECT', str(exc))
 
+    mda = None
+    if not args.dry_run:
+        buffer_manager = BufferManager(
+            instruments=[cfg['traded_instrument']] + cfg['context_instruments'],
+            timeframes=cfg['fvg_detection_timeframes'],
+            max_size=cfg['market_data']['bar_buffer_size'],
+        )
+        mda = MarketDataAgent(cfg, ibkr, db, buffer_manager)
+        await mda.start()
+
     ti = cfg['traded_instrument']
     startup_detail = json.dumps({
         'profile': args.profile,
@@ -117,6 +129,8 @@ async def run(args: argparse.Namespace):
     finally:
         await db.log_event('SHUTDOWN', 'KeyboardInterrupt')
         logger.info('SHUTDOWN')
+        if mda is not None:
+            await mda.stop()
         await db.close()
         if ibkr.is_connected():
             await ibkr.disconnect()

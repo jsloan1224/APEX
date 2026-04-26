@@ -3,6 +3,10 @@ from datetime import datetime, timezone
 
 import aiosqlite
 
+from core.logger import get_logger
+
+logger = get_logger('apex.core.database')
+
 
 class DatabaseManager:
     def __init__(self, db_path: str):
@@ -169,6 +173,26 @@ class DatabaseManager:
                 sister_swing_price  REAL,
                 detail              TEXT
             );
+
+            CREATE TABLE IF NOT EXISTS historical_bars (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                instrument   TEXT NOT NULL,
+                timeframe    INTEGER NOT NULL,
+                timestamp    TEXT NOT NULL,
+                open         REAL NOT NULL,
+                high         REAL NOT NULL,
+                low          REAL NOT NULL,
+                close        REAL NOT NULL,
+                volume       INTEGER NOT NULL,
+                session_date TEXT NOT NULL,
+                created_at   TEXT NOT NULL
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_historical_bars_unique
+                ON historical_bars (instrument, timeframe, timestamp);
+
+            CREATE INDEX IF NOT EXISTS idx_historical_bars_lookup
+                ON historical_bars (instrument, timeframe, session_date);
         """)
         await self._conn.commit()
 
@@ -194,3 +218,31 @@ class DatabaseManager:
         cursor = await self._conn.execute(f"PRAGMA table_info({table})")
         rows = await cursor.fetchall()
         return [row[1] for row in rows]
+
+    async def insert_historical_bars(self, bars: list) -> int:
+        """
+        Bulk insert bars into historical_bars.
+        Uses INSERT OR IGNORE to handle duplicates gracefully.
+        Returns count of rows actually inserted.
+        bars: list of dicts matching the historical_bars schema (minus id, created_at).
+        """
+        assert self._conn is not None
+        now = datetime.now(timezone.utc).isoformat() + 'Z'
+        rows = [
+            (
+                bar['instrument'], bar['timeframe'], bar['timestamp'],
+                bar['open'], bar['high'], bar['low'], bar['close'], bar['volume'],
+                bar['session_date'], now,
+            )
+            for bar in bars
+        ]
+        cursor = await self._conn.executemany(
+            "INSERT OR IGNORE INTO historical_bars "
+            "(instrument, timeframe, timestamp, open, high, low, close, volume, session_date, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            rows,
+        )
+        await self._conn.commit()
+        count = cursor.rowcount
+        logger.debug('Inserted %d historical bars', count)
+        return count

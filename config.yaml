@@ -168,3 +168,8 @@ dashboard:
   host: '127.0.0.1'
   port: 8050
   refresh_interval_ms: 1000
+
+market_data:
+  bar_buffer_size: 500              # bars retained per (instrument, timeframe) in memory
+  bar_timestamp_convention: close   # 'close' = IBKR open-time + bar duration. Do not change.
+  persist_historical_bars: true     # write completed-session bars to historical_bars table
