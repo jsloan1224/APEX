@@ -60,6 +60,15 @@ US market holidays (no trading) are not currently in the session clock. CME Glob
 
 ## Technical Debt
 
+### B-306 — `reqHistoricalData` blocks event loop during startup (Phase 3)
+`_start_subscriptions()` in `MarketDataAgent` calls `reqHistoricalData` (synchronous ib_insync call) inside an `async def` without `run_in_executor`. With 18 streams and a 2-day history load each, this blocks the asyncio event loop 18 times during startup. No crash in paper mode but will freeze the loop. Address when the full async event loop architecture is wired in Phase 3.
+
+### B-307 — `_setup_disconnect_handler` uses bare `asyncio.create_task()` (Phase 3)
+The disconnect callback in `MarketDataAgent._setup_disconnect_handler()` calls `asyncio.create_task(self._reconnect())` — the bare form, not `asyncio.get_running_loop().create_task()`. Inconsistent with the rest of the codebase and will raise `RuntimeError` if triggered outside a running loop. Fix when reconnect logic is exercised in Phase 3 integration testing.
+
+### B-308 — `cursor.rowcount` unreliable after `executemany` with INSERT OR IGNORE
+`DatabaseManager.insert_historical_bars()` uses `cursor.rowcount` to return the inserted count. On some aiosqlite/SQLite versions, `rowcount` after `executemany` returns `-1` or total attempted rows, not actual inserted rows. The value is only used in debug logging so no logic is affected, but the log will show wrong counts. Fix by replacing with `SELECT changes()` after the insert.
+
 ### B-305 — KillSwitch shared instance not wired into MarketDataAgent
 Phase 2 `MarketDataAgent` instantiates its own `KillSwitch(config)` internally because the constructor signature in the spec didn't include a KillSwitch parameter. This means the MarketDataAgent's kill switch is a separate instance from the one in `main.py`. Phase 6 must wire a single shared KillSwitch instance through the full system — passed into MarketDataAgent, ExecutionAgent, and any other agent that needs to trigger it.
 
