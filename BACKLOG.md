@@ -1,6 +1,6 @@
 # BACKLOG.md
 **Open issues, deferred decisions, known limitations, technical debt.**
-**Last updated: April 26, 2026**
+**Last updated: April 26, 2026 | Phase 2 complete**
 
 This is the running list of things that are known but not blocking. New items added at the top of each section. When an item is resolved, move it to "Resolved" at the bottom of the file.
 
@@ -8,34 +8,10 @@ This is the running list of things that are known but not blocking. New items ad
 
 ## Open Decisions (need user input before relevant phase)
 
-> **Phase 2 spec authoring is blocked on B-001, B-004, and B-005.** These three need user resolution before the Phase 2 spec can be drafted.
-
-### B-001 — Bar buffer persistence strategy (Phase 2) — **BLOCKER**
-**Question:** Should the in-memory bar buffer also persist to SQLite, or stay memory-only?
-**Tradeoff:**
-- Memory-only: simpler, faster, but lose all bars on restart — must re-request historical bars on every startup
-- Persistent: durability, easier post-mortem analysis, but writes-per-second scale up significantly (3 instruments × 6 timeframes = potentially 18 writes per minute on 1m bars alone)
-**Recommendation:** memory-only for the live ring buffer (last N bars per timeframe, where N is enough for indicator computation), with a separate `historical_bars` table that captures only completed-session data for backtest / replay. Decide before Phase 2 spec is authored.
-
-### B-002 — Phase 2 spec authoring approach
-**Question:** Author Phase 2 spec from scratch, or fork it from the Phase 1 spec template?
-**Recommendation:** Fork the structure (preamble, build instructions, audit checklist) but write fresh content. Phase 2 is fundamentally different in nature — it's a runtime data pipeline, not a static foundation. Trying to mirror Phase 1's section breakdown one-to-one will be awkward.
-
-### B-003 — Smoke test before Phase 2
-**Question:** Run `python main.py --dry-run` once on the user's Windows box before starting Phase 2?
-**Recommendation:** Yes. Tests verify the parts; a smoke test verifies they wire together. 30 seconds of effort, catches integration issues that pytest can't.
-
-### B-004 — IBKR contract resolution — **BLOCKER**
-**Question:** How do we resolve "ES" to a specific futures contract? IBKR requires a Contract object with symbol, secType, exchange, currency, and either expiry or continuous-front specification.
-**Note:** Front-month rolls every quarter (Mar/Jun/Sep/Dec). System needs to either:
-- Track current front-month symbol manually in config (e.g., `ES_CURRENT_CONTRACT: ESM6`)
-- Use `reqContractDetails()` to discover front-month dynamically each session
-- Use IBKR's continuous futures symbol if available
-**Recommendation:** Dynamic resolution at session start via `reqContractDetails`. Cache for the session. Specify in Phase 2 spec.
-
-### B-005 — Bar timestamp convention from IBKR — **BLOCKER**
-**Question:** IBKR returns bars where timestamp = bar OPEN time. ICT methodology typically references bar CLOSE. Pick one and document it.
-**Recommendation:** Convert to bar-close timestamps internally. Document in `core/database.py` schema comments. Most ICT software uses close timestamps and the user is likely operating mentally in that frame.
+### B-006 — Validation prompt instrument-specific tuning
+**Question:** Does the AI gate prompt need to know it's evaluating an index futures contract vs general "trade setup"?
+**Note:** Currently the prompt is instrument-agnostic. ES, NQ, and YM behave differently — NQ is more volatile, YM is slower. The prompt may produce better judgment if it knows which instrument it's evaluating beyond just the symbol string.
+**Recommendation:** Defer to Phase 5. Run with current prompt for first 30 trades, log scores, see if scores differ meaningfully across instruments. Tune only if data shows it matters.
 
 ### B-006 — Validation prompt instrument-specific tuning
 **Question:** Does the AI gate prompt need to know it's evaluating an index futures contract vs general "trade setup"?
@@ -83,6 +59,9 @@ US market holidays (no trading) are not currently in the session clock. CME Glob
 ---
 
 ## Technical Debt
+
+### B-305 — KillSwitch shared instance not wired into MarketDataAgent
+Phase 2 `MarketDataAgent` instantiates its own `KillSwitch(config)` internally because the constructor signature in the spec didn't include a KillSwitch parameter. This means the MarketDataAgent's kill switch is a separate instance from the one in `main.py`. Phase 6 must wire a single shared KillSwitch instance through the full system — passed into MarketDataAgent, ExecutionAgent, and any other agent that needs to trigger it.
 
 ### B-301 — Stub style inconsistency
 Some agent stubs use docstring + class with `pass` body; others use docstring + class with `__init__(config)`. Both valid but inconsistent. Cosmetic; not worth fixing now. Address whenever the relevant agent gets implemented.
@@ -135,5 +114,19 @@ All resolved in v1.3 commit `2864cbc`.
 ### R-002 — Single-instrument trading model
 **Resolved 2026-04-26.** Earlier spec versions had `markets: [ES, NQ, YM]` allowing multi-instrument concurrent trading. User clarified intent: trade one instrument per run, use the others as context. Implemented as `traded_instrument` (string) + `context_instruments` (list) in config, with `--market` CLI override. Sister instruments stream read-only for SMT divergence and correlation context.
 
-### R-003 — Phase 1 Build
+### R-004 — Phase 2 blockers resolved (B-001, B-004, B-005)
+**Resolved 2026-04-26.** User decisions:
+- B-001: Memory-only ring buffer (`collections.deque`) for live pipeline + separate `historical_bars` SQLite table for completed-session data. All 18 streams persisted.
+- B-004: Dynamic contract resolution via `reqContractDetails()` at session start. Front-month = nearest expiry >= today. Cached for session lifetime.
+- B-005: Bar close time convention. IBKR open time + `timedelta(minutes=timeframe)` internally. UTC ISO 8601 output.
+- B-002 (spec approach): Written fresh, mirroring Phase 1 structure.
+- B-003 (smoke test): Confirmed passing by user — `python main.py` ran successfully on Windows box.
+
+### R-005 — Phase 2 Build
+**Resolved 2026-04-26.** Claude Code completed Phase 2 market data agent. 41 tests passing (25 Phase 1 + 8 bar buffer + 8 market data). Four implementation deviations — all audited and accepted:
+1. Gap check runs before push (spec contradiction resolved in favor of correct behavior).
+2. KillSwitch instantiated internally in MarketDataAgent — tracked as B-305 for Phase 6.
+3. `test_database.py` updated for 9-table schema — correct and necessary.
+4. `asyncio.get_running_loop().create_task()` pattern used — superior to bare `asyncio.create_task()` for callback context.
+Committed to `build` branch.
 **Resolved 2026-04-26.** Claude Code completed Phase 1 foundation. 25 tests passing. Audited against Section 4 checklist and verified by Claude (design). Commit on `main`.

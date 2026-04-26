@@ -1,13 +1,14 @@
 # PROJECT_STATE.md
 **Current build state for APEX. Updated when phase status changes.**
-**Last updated: April 26, 2026 | Spec version: v1.3 | Phase 1 complete**
+**Last updated: April 26, 2026 | Spec version: v1.3 | Phase 2 complete**
 
 ---
 
 ## Current Phase
 
 **Phase 1 — Foundation: COMPLETE and AUDITED.**
-**Phase 2 — Market Data Agent: NOT STARTED. Awaiting user go-ahead.**
+**Phase 2 — Market Data Agent: COMPLETE and AUDITED.**
+**Phase 3 — Session Clock + News Scraper: NOT STARTED. Awaiting user go-ahead.**
 
 ---
 
@@ -31,9 +32,16 @@
 - `core/ibkr_client.py` — `IBKRClient` wrapper with async connect/disconnect/test_connection. Live port 7496 guard raises `IBKRConnectionError` when `mode != 'live'`. Dry-run support.
 - `core/logger.py` — `configure_logging()` and `get_logger()`. RotatingFileHandler + console handler, UTC timestamps via `formatter.converter = time.gmtime`.
 
+### Phase 2 Modules — Implemented
+- `core/bar_buffer.py` — `BarBuffer` (thread-safe deque ring buffer, configurable size) and `BufferManager` (18 buffers: 3 instruments × 6 timeframes). All read/write ops under `threading.Lock`. Push validates required fields.
+- `agents/market_data_agent.py` — Full implementation: dynamic contract resolution via `reqContractDetails()`, `reqHistoricalData` with `keepUpToDate=True` for all 6 timeframes × 3 instruments = 18 streams, bar normalization to close-time UTC, buffer writes, historical persistence via `asyncio.get_running_loop().create_task()`, gap detection + logging, reconnect logic with kill switch trigger on exhaustion.
+- `core/database.py` — `historical_bars` table added (9th table). Unique index on `(instrument, timeframe, timestamp)`. Lookup index on `(instrument, timeframe, session_date)`. `insert_historical_bars()` bulk method with `INSERT OR IGNORE`.
+- `config.yaml` — `market_data` block added: `bar_buffer_size: 500`, `bar_timestamp_convention: close`, `persist_historical_bars: true`.
+
 ### Agents — Built or Stubbed
 - `agents/risk_manager.py` — `KillSwitch` class with config-driven limits, `check()` returning False (stub), `trigger()`, `reset()`. Full logic Phase 6.
-- All other agents are stubs (Phase 2+): `market_data_agent`, `session_clock_agent`, `news_scraper_agent`, `sentiment_agent`, `smt_agent`, `validation_gate`, `execution_agent`, `audit_agent`, `chart_agent`.
+- `agents/market_data_agent.py` — **BUILT** (Phase 2). See above.
+- All other agents are stubs (Phase 3+): `session_clock_agent`, `news_scraper_agent`, `sentiment_agent`, `smt_agent`, `validation_gate`, `execution_agent`, `audit_agent`, `chart_agent`.
 
 ### Models — All Stubbed
 `models/base_model.py`, `silver_bullet.py`, `ifvg_smt.py`, `power_of_three.py`, `news_catalyst.py` — all stubs. Built in Phases 4 and 10.
@@ -51,8 +59,8 @@
 ### Testing Infrastructure
 - `pytest.ini` with `asyncio_mode = auto`
 - `conftest.py` registers asyncio marker
-- 25 tests across 6 files, all passing
-- Tests verify: all 8 tables created, signal columns including SMT/AI gate fields, IBKR live port guard, dry-run mode, kill switch state machine, signal dataclass fields, dashboard imports, SMT agent imports
+- 41 tests across 8 files, all passing
+- Tests verify: all 9 tables created, bar buffer eviction and thread safety, bar normalization (open→close time), gap detection, historical bar insert/dedup, IBKR live port guard, dry-run mode, kill switch state machine, signal dataclass fields, dashboard imports, SMT agent imports
 
 ### Project Hygiene
 - `.env.template` with ANTHROPIC_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, IBKR_ACCOUNT_ID
@@ -65,15 +73,19 @@
 
 ## What's Verified Working
 
-Verified by running pytest:
-- DB schema creates cleanly (all 8 tables)
+Verified by running pytest (41/41):
+- DB schema creates cleanly (all 9 tables including historical_bars)
+- BarBuffer ring buffer eviction, thread safety, field validation
+- Bar normalization: IBKR open time → close time UTC ISO 8601
+- Gap detection logs correctly, does not fill gaps
+- Historical bar bulk insert with duplicate suppression
 - SignalCandidate dataclass instantiates with v1.3 field set
 - IBKR live-port guard raises in not-live mode
-- Dry-run skips IBKR connection
+- Dry-run skips IBKR and MarketDataAgent
 - KillSwitch state machine works
 - All stubs are importable
 
-**Not yet smoke-tested by user:** `python main.py --dry-run` — actually running the CLI end-to-end on a real machine. Recommended before Phase 2 starts.
+**Smoke tested by user:** `python main.py` ran successfully on Windows box (paper mode, expected IBKR connection error since TWS not running).
 
 ---
 
@@ -83,15 +95,14 @@ These are correctly stubbed per the phased build discipline. Do not implement un
 
 | Component | Phase |
 |---|---|
-| IBKR bar streaming | 2 |
-| Session clock window logic | 2 |
+| Session clock window logic | 3 |
 | Kill zone cutoff enforcement | 3 |
 | News scraping + impact filter | 3 |
 | FVG / OB / MSS / sweep / bias detection algorithms | 4 |
 | SMT divergence detection | 4 |
 | Silver Bullet model logic | 4 |
 | Claude API call + quality gate | 5 |
-| KillSwitch.check() full logic | 6 |
+| KillSwitch.check() full logic + shared instance wiring | 6 |
 | IBKR bracket order placement | 7 |
 | Telegram alerts | 8 |
 | Plotly Dash chart UI | 9 |
@@ -116,29 +127,17 @@ These are **non-negotiable**. See `CLAUDE.md` for the full list. Highlights:
 
 ---
 
-## Phase 2 Preview — What Comes Next
+## Phase 3 Preview — What Comes Next
 
-Phase 2 builds the **market data agent**. Scope:
+Phase 3 builds the **session clock agent** and **news scraper agent**. Scope:
 
-- IBKR connection acquires three Contract objects (traded instrument + 2 context instruments) — front-month continuous futures
-- `reqRealTimeBars()` or `reqHistoricalData()` with `keepUpToDate=True` for each of 6 timeframes per instrument = 18 streams
-- Bar normalization: every bar timestamped UTC, written to in-memory bar buffer
-- Bar buffer persistence to SQLite (or in-memory only — Phase 2 design decision)
-- Gap handling: detect missing bars, log warning, do not silently fill
-- Session boundary handling: Globex hours (Sunday 18:00 ET to Friday 17:00 ET, with daily 17:00-18:00 break)
-- Reconnect resilience: if TWS drops, retry per `ibkr.reconnect_attempts`, log every reconnection event
+- Session clock: window open/close logic for LONDON, NY_AM, NY_PM in America/New_York. Kill zone cutoff enforcement (`signal_cutoff_minutes_before_kz_close`). US market holiday calendar.
+- News scraper: fetch economic calendar from 2–3 sources (user to decide sources — see B-202). Parse high-impact events. `news_window_minutes` blackout enforcement. Write to `news_events` table.
 
-**Phase 2 must be specified in detail before Claude Code starts.** The current spec only outlines the agent at high level. A `APEX_Phase2_ClaudeCode_Spec.md` file should be authored before Phase 2 begins, mirroring the structure and rigor of the Phase 1 spec.
+**Phase 3 must be specified in detail before Claude Code starts.** Author `APEX_Phase3_ClaudeCode_Spec.md` following the same structure as Phase 1 and Phase 2 specs.
 
-### Blockers Before Authoring the Phase 2 Spec
-
-These three open decisions in `BACKLOG.md` must be resolved with the user before drafting the Phase 2 spec:
-
-- **B-001** — Bar buffer persistence strategy (memory-only, persistent, or hybrid)
-- **B-004** — IBKR contract resolution (static config vs dynamic `reqContractDetails`)
-- **B-005** — Bar timestamp convention (open time vs close time)
-
-Do not start drafting until all three are answered.
+### Open Decision Before Phase 3 Spec
+- **B-202** — News scraper sources: user must choose 2–3 sources (Reuters, Bloomberg, ForexFactory, Investing.com economic calendar). Decide before Phase 3 spec is authored.
 
 ---
 

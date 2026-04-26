@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md
 **Bootstrap document for new chat sessions on the APEX project.**
-**Last updated: April 26, 2026 | Phase 1 complete, awaiting Phase 2 spec authoring**
+**Last updated: April 26, 2026 | Phase 2 complete, awaiting Phase 3 spec authoring**
 
 ---
 
@@ -13,6 +13,7 @@ If you are Claude in a fresh conversation, the user has just brought you onto th
 3. `BACKLOG.md` — open issues and deferred decisions
 4. `APEX_System_Whiteboard.md` — full system design (source of truth)
 5. `APEX_Phase1_ClaudeCode_Spec.md` — Phase 1 build instructions (already executed)
+6. `APEX_Phase2_ClaudeCode_Spec.md` — Phase 2 build instructions (already executed)
 
 After reading those, you have full context. Do not ask the user to re-explain the project. The user expects continuity.
 
@@ -20,7 +21,7 @@ After reading those, you have full context. Do not ask the user to re-explain th
 
 ## One-Paragraph Project Summary
 
-APEX is a fully autonomous ICT (Inner Circle Trader) futures trading system written in Python. It trades **one selectable instrument per run** — ES, NQ, or YM — on Interactive Brokers. The other two indices stream read-only as context for SMT divergence and correlation. Deterministic ICT setup detection (bias chain, liquidity sweep, MSS, FVG identification) runs in Python; a Claude Haiku 4.5 quality gate scores three judgment dimensions (displacement quality, sweep decisiveness, environment) on 1–5 before any trade executes. SQLite logs everything, Plotly Dash provides a real-time dashboard, paper trading via IBKR port 7497 with live trading guarded behind explicit flags. Build is split into 11 sequential phases; **Phase 1 (Foundation) is complete and audited**. Next step is authoring `APEX_Phase2_ClaudeCode_Spec.md` for the market data agent.
+APEX is a fully autonomous ICT (Inner Circle Trader) futures trading system written in Python. It trades **one selectable instrument per run** — ES, NQ, or YM — on Interactive Brokers. The other two indices stream read-only as context for SMT divergence and correlation. Deterministic ICT setup detection (bias chain, liquidity sweep, MSS, FVG identification) runs in Python; a Claude Haiku 4.5 quality gate scores three judgment dimensions (displacement quality, sweep decisiveness, environment) on 1–5 before any trade executes. SQLite logs everything, Plotly Dash provides a real-time dashboard, paper trading via IBKR port 7497 with live trading guarded behind explicit flags. Build is split into 11 sequential phases; **Phase 1 (Foundation) and Phase 2 (Market Data Agent) are complete and audited**. Next step is authoring `APEX_Phase3_ClaudeCode_Spec.md` for the session clock and news scraper agents.
 
 ---
 
@@ -29,19 +30,15 @@ APEX is a fully autonomous ICT (Inner Circle Trader) futures trading system writ
 | Item | State |
 |---|---|
 | Spec version | v1.3 (committed) |
-| Current phase | Phase 1 — Foundation: **COMPLETE** |
-| Next phase | Phase 2 — Market Data Agent: **NOT STARTED** |
-| Next required action | Resolve B-001, B-004, B-005 with user, then author `APEX_Phase2_ClaudeCode_Spec.md` |
-| Tests passing | 25 / 25 |
-| Smoke test status | Not yet run by user (recommended before Phase 2) |
+| Current phase | Phase 2 — Market Data Agent: **COMPLETE** |
+| Next phase | Phase 3 — Session Clock + News Scraper: **NOT STARTED** |
+| Next required action | Resolve B-202 (news sources) with user, then author `APEX_Phase3_ClaudeCode_Spec.md` |
+| Tests passing | 41 / 41 |
+| Smoke test status | Confirmed passing by user (paper mode, Windows) |
 
-### Blockers Before Phase 2 Spec Authoring
+### Blocker Before Phase 3 Spec Authoring
 
-These three open decisions in `BACKLOG.md` must be resolved with the user before the Phase 2 spec can be written. Do not start drafting the spec until all three are answered.
-
-- **B-001** — Bar buffer persistence: memory-only ring buffer, persistent table, or hybrid?
-- **B-004** — IBKR contract resolution: static config symbol vs dynamic `reqContractDetails` at session start
-- **B-005** — Bar timestamp convention: open time (IBKR default) vs close time (ICT convention)
+- **B-202** — News scraper sources: user must choose 2–3 sources before the Phase 3 spec can be written. Options: Reuters, Bloomberg, ForexFactory, Investing.com economic calendar.
 
 ---
 
@@ -102,20 +99,17 @@ Phase 1 went through this loop successfully. Phase 2 is next.
 
 ---
 
-## How to Pick Up Phase 2
+## How to Pick Up Phase 3
 
-When the user says "let's start Phase 2" or similar:
+When the user says "let's start Phase 3" or similar:
 
-1. Confirm the user has run a smoke test of Phase 1 (`python main.py --dry-run`) on their machine, OR explicitly skipped it.
-2. Read `BACKLOG.md` items B-001 through B-005 — these are open Phase 2 design questions that need user input.
-3. Resolve those questions with the user. Specifically:
-   - B-001: Bar buffer persistence strategy (memory-only vs persistent, or hybrid)
-   - B-004: IBKR contract resolution approach (static config vs dynamic per-session)
-   - B-005: Bar timestamp convention (open vs close)
-4. Once resolved, **author `APEX_Phase2_ClaudeCode_Spec.md`**. Mirror the structure of the Phase 1 spec: scope, what changed since previous version, build instructions section, audit checklist. Push to repo.
-5. Hand off to Claude Code with a paste-ready message pointing to the new spec file.
+1. Confirm B-202 is resolved — user must have chosen news scraper sources.
+2. Read `BACKLOG.md` for any other open Phase 3 items.
+3. Author `APEX_Phase3_ClaudeCode_Spec.md`. Scope: session clock agent (window logic, kill zone cutoff, holiday calendar) + news scraper agent (fetch, parse, blackout enforcement, `news_events` table writes).
+4. Push spec to `build` branch.
+5. Hand off to Claude Code with a message pointing to the spec file.
 
-Do not let the user paste a Phase 2 build message until the spec is written and committed. Phase 1 worked because the spec was rigorous; Phase 2 needs the same discipline.
+Do not let the user paste a Phase 3 build message until the spec is written and committed.
 
 ---
 
@@ -129,7 +123,8 @@ APEX/
 ├── BACKLOG.md                         # Open issues
 ├── SESSION_HANDOFF.md                 # This file
 ├── APEX_System_Whiteboard.md          # Full design (source of truth)
-├── APEX_Phase1_ClaudeCode_Spec.md     # Phase 1 build instructions
+├── APEX_Phase1_ClaudeCode_Spec.md     # Phase 1 build instructions (executed)
+├── APEX_Phase2_ClaudeCode_Spec.md     # Phase 2 build instructions (executed)
 │
 ├── config.yaml                        # All profiles, instruments, risk
 ├── main.py                            # CLI entry point
@@ -175,6 +170,6 @@ APEX/
 
 ## If Anything Conflicts
 
-`APEX_System_Whiteboard.md` and `APEX_Phase1_ClaudeCode_Spec.md` are the source of truth for what's already designed. `CLAUDE.md` is the source of truth for project rules. This file (`SESSION_HANDOFF.md`) is meta — if it conflicts with the others, the others win.
+`APEX_System_Whiteboard.md`, `APEX_Phase1_ClaudeCode_Spec.md`, and `APEX_Phase2_ClaudeCode_Spec.md` are the source of truth for what's already designed. `CLAUDE.md` is the source of truth for project rules. This file (`SESSION_HANDOFF.md`) is meta — if it conflicts with the others, the others win.
 
 If you find conflicts in the docs themselves, raise them with the user. Do not silently pick one version.
