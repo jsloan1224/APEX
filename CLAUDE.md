@@ -46,7 +46,7 @@ APEX is built in 11 sequential phases. **No phase begins until the previous phas
 | 10 | Models 2-4 — IFVG+SMT, Power of Three, News Catalyst |
 | 11 | Live transition |
 
-Spec for the current phase is the source of truth. Files marked as "stub — Phase N" in folder structure should only contain a docstring and a class skeleton or `pass` until that phase begins.
+Spec for the current phase is the source of truth. The phase spec's Section 3b folder structure annotates each file as either `# BUILD NOW` (real implementation required this phase) or `# stub — Phase N` (placeholder; full implementation deferred to Phase N). Files marked `# stub — Phase N` must contain only a docstring and a class skeleton (`pass` body or `__init__` accepting config) until that phase begins. See "Stubs" under File Conventions for the exact pattern.
 
 ---
 
@@ -109,7 +109,7 @@ These were in earlier spec versions and are **gone**. Do not re-introduce them.
 - **Multi-instrument concurrent trading** — `markets: [ES, NQ, YM]` as a list of traded instruments is wrong. The only valid shape is one `traded_instrument` plus `context_instruments`.
 - **3m or 5m in bias chain** — they were never bias timeframes. They are FVG-detection-only.
 - **Sonnet 4.5 (`claude-sonnet-4-5-20251001`)** — old model string. Use `claude-haiku-4-5-20251001` for the gate.
-- **Epstein/Maxwell threads or any unrelated content** — APEX is a trading system. (This rule exists because Claude memory carries unrelated project context.)
+- **Cross-project memory bleed** — APEX is a trading system, full stop. If Claude memory surfaces context from any other project the user has worked on (book drafts, research notes, anything else), ignore it. Never weave unrelated content into APEX docs, code, or comments.
 
 ---
 
@@ -153,7 +153,7 @@ Not `raise NotImplementedError` at module top level (breaks imports). Not empty 
 
 ### Database
 - All schema lives in `core/database.py` as `CREATE TABLE IF NOT EXISTS` statements run on init.
-- Migrations are not in scope. If schema needs to change, the table is dropped and recreated for now.
+- Migrations are not in scope through Phase 10. If schema needs to change before then, the table is dropped and recreated. **This is a known limitation — see `BACKLOG.md` B-103.** A real migration story must be in place before Phase 11 (live transition), since drop-recreate destroys live trade history.
 - Every timestamp column stores UTC ISO 8601 strings, not Unix epochs.
 
 ---
@@ -197,6 +197,16 @@ When the user brings Claude Code's output back for audit:
 5. Give a clear pass/fail verdict, not a soft "looks good"
 
 If the build fails audit, give a single concise list of what to fix. Do not rewrite the code.
+
+### What an Audit Actually Consists Of
+
+- **Read every checklist item** in the phase spec's audit section against the actual file contents in the cloned repo. Not the handoff doc's claim that something passed — the file itself.
+- **Run `pytest -v` in a fresh clone** and verify the count and pass/fail match the spec's requirements. Do not trust reported test output from the build session.
+- **Spot-check stubs** — confirm files marked "stub — Phase N" in Section 3b of the spec contain only docstring + class skeleton, not partial Phase N+ logic.
+- **Audits are end-of-session activity.** New chat sessions do not start with a code audit. Sessions start by reading the handoff docs and giving the user a status report (per `BOOTSTRAP_TEMPLATE.md`). Audits run at the end of a build phase, when the user brings Claude Code's output back.
+- **The auditor does not modify code.** If audit fails, write the fix list and stop. Implementation goes back to Claude Code.
+
+Every phase spec must include its own audit checklist as a numbered section (Section 4 in Phase 1). New phase specs that omit this fail review and must be rewritten before Claude Code is engaged.
 
 ---
 

@@ -13,23 +13,25 @@ Replace the placeholder PAT with a fresh one from your jsloan1224 GitHub account
 ```
 APEX project bootstrap.
 
-Clone the repo and read these files in order before doing anything else:
-1. SESSION_HANDOFF.md
-2. CLAUDE.md
-3. PROJECT_STATE.md
-4. BACKLOG.md
-
 Repo: https://github.com/jsloan1224/APEX
 
 Clone with this PAT (regenerate per session):
 github_pat_PASTE_FRESH_TOKEN_HERE
 
-After reading, give me a one-paragraph status report:
+After cloning, read these files in order before doing anything else:
+1. SESSION_HANDOFF.md  (entry point — points to the rest)
+2. CLAUDE.md           (rules of engagement)
+3. PROJECT_STATE.md    (what's built, what's next)
+4. BACKLOG.md          (open issues and deferred decisions)
+
+Then give me a one-paragraph status report:
 - What phase is complete
 - What phase is next
 - Any open questions from BACKLOG that need my input before proceeding
 
-Do not propose work or write code until the status report is delivered and I respond.
+Do not propose work, write code, run audits, or read source files until the
+status report is delivered and I respond. Phase audits are end-of-session,
+not start-of-session.
 ```
 
 ---

@@ -8,7 +8,9 @@ This is the running list of things that are known but not blocking. New items ad
 
 ## Open Decisions (need user input before relevant phase)
 
-### B-001 — Bar buffer persistence strategy (Phase 2)
+> **Phase 2 spec authoring is blocked on B-001, B-004, and B-005.** These three need user resolution before the Phase 2 spec can be drafted.
+
+### B-001 — Bar buffer persistence strategy (Phase 2) — **BLOCKER**
 **Question:** Should the in-memory bar buffer also persist to SQLite, or stay memory-only?
 **Tradeoff:**
 - Memory-only: simpler, faster, but lose all bars on restart — must re-request historical bars on every startup
@@ -23,7 +25,7 @@ This is the running list of things that are known but not blocking. New items ad
 **Question:** Run `python main.py --dry-run` once on the user's Windows box before starting Phase 2?
 **Recommendation:** Yes. Tests verify the parts; a smoke test verifies they wire together. 30 seconds of effort, catches integration issues that pytest can't.
 
-### B-004 — IBKR contract resolution
+### B-004 — IBKR contract resolution — **BLOCKER**
 **Question:** How do we resolve "ES" to a specific futures contract? IBKR requires a Contract object with symbol, secType, exchange, currency, and either expiry or continuous-front specification.
 **Note:** Front-month rolls every quarter (Mar/Jun/Sep/Dec). System needs to either:
 - Track current front-month symbol manually in config (e.g., `ES_CURRENT_CONTRACT: ESM6`)
@@ -31,7 +33,7 @@ This is the running list of things that are known but not blocking. New items ad
 - Use IBKR's continuous futures symbol if available
 **Recommendation:** Dynamic resolution at session start via `reqContractDetails`. Cache for the session. Specify in Phase 2 spec.
 
-### B-005 — Bar timestamp convention from IBKR
+### B-005 — Bar timestamp convention from IBKR — **BLOCKER**
 **Question:** IBKR returns bars where timestamp = bar OPEN time. ICT methodology typically references bar CLOSE. Pick one and document it.
 **Recommendation:** Convert to bar-close timestamps internally. Document in `core/database.py` schema comments. Most ICT software uses close timestamps and the user is likely operating mentally in that frame.
 

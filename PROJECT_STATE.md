@@ -51,7 +51,7 @@
 ### Testing Infrastructure
 - `pytest.ini` with `asyncio_mode = auto`
 - `conftest.py` registers asyncio marker
-- 25 tests across 6 files, all passing in 0.67s
+- 25 tests across 6 files, all passing
 - Tests verify: all 8 tables created, signal columns including SMT/AI gate fields, IBKR live port guard, dry-run mode, kill switch state machine, signal dataclass fields, dashboard imports, SMT agent imports
 
 ### Project Hygiene
@@ -129,6 +129,16 @@ Phase 2 builds the **market data agent**. Scope:
 - Reconnect resilience: if TWS drops, retry per `ibkr.reconnect_attempts`, log every reconnection event
 
 **Phase 2 must be specified in detail before Claude Code starts.** The current spec only outlines the agent at high level. A `APEX_Phase2_ClaudeCode_Spec.md` file should be authored before Phase 2 begins, mirroring the structure and rigor of the Phase 1 spec.
+
+### Blockers Before Authoring the Phase 2 Spec
+
+These three open decisions in `BACKLOG.md` must be resolved with the user before drafting the Phase 2 spec:
+
+- **B-001** — Bar buffer persistence strategy (memory-only, persistent, or hybrid)
+- **B-004** — IBKR contract resolution (static config vs dynamic `reqContractDetails`)
+- **B-005** — Bar timestamp convention (open time vs close time)
+
+Do not start drafting until all three are answered.
 
 ---
 

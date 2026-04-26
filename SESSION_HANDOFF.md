@@ -6,7 +6,7 @@
 
 ## Purpose
 
-If you are Claude in a fresh conversation, the user has just brought you onto the APEX project. **Read this file first**, then read the four supporting docs in this order:
+If you are Claude in a fresh conversation, the user has just brought you onto the APEX project. **Read this file first**, then read the supporting docs in this order:
 
 1. `CLAUDE.md` — non-negotiable rules of engagement
 2. `PROJECT_STATE.md` — what's built, what's stubbed, what's next
@@ -31,9 +31,17 @@ APEX is a fully autonomous ICT (Inner Circle Trader) futures trading system writ
 | Spec version | v1.3 (committed) |
 | Current phase | Phase 1 — Foundation: **COMPLETE** |
 | Next phase | Phase 2 — Market Data Agent: **NOT STARTED** |
-| Next required action | Author `APEX_Phase2_ClaudeCode_Spec.md` |
-| Tests passing | 25 / 25, 0.67s |
+| Next required action | Resolve B-001, B-004, B-005 with user, then author `APEX_Phase2_ClaudeCode_Spec.md` |
+| Tests passing | 25 / 25 |
 | Smoke test status | Not yet run by user (recommended before Phase 2) |
+
+### Blockers Before Phase 2 Spec Authoring
+
+These three open decisions in `BACKLOG.md` must be resolved with the user before the Phase 2 spec can be written. Do not start drafting the spec until all three are answered.
+
+- **B-001** — Bar buffer persistence: memory-only ring buffer, persistent table, or hybrid?
+- **B-004** — IBKR contract resolution: static config symbol vs dynamic `reqContractDetails` at session start
+- **B-005** — Bar timestamp convention: open time (IBKR default) vs close time (ICT convention)
 
 ---
 
@@ -145,10 +153,9 @@ APEX/
 
 ## Known State of the User's Local Environment
 
-- User is on Windows. Path: `C:\Users\danvi\source\repos\APEX`
-- User has Claude Code installed and working
-- Repo is at `https://github.com/jsloan1224/APEX`
-- User uses fine-grained PATs from the `jsloan1224` GitHub account for pushes
+- User runs Claude Code locally on Windows
+- Repo: `https://github.com/jsloan1224/APEX`
+- User uses fine-grained PATs from the `jsloan1224` GitHub account for pushes (regenerated per session)
 - Anthropic API key not yet placed in `.env`
 - IBKR TWS not yet confirmed running on user's machine
 - No smoke test of `main.py` has been run yet
