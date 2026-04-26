@@ -1,6 +1,6 @@
 # CLAUDE.md
 **Project: APEX — Autonomous Predictive Execution System**
-**Last updated: April 2026 | Spec version: v1.3**
+**Last updated: April 26, 2026 | Spec version: v1.3 | Phase 1 complete**
 
 ---
 
@@ -9,6 +9,16 @@
 This file is read by Claude Code at the start of every session and by Claude (design/audit) when reviewing builds. It defines the rules of engagement for working on APEX so the system stays consistent across sessions, machines, and weeks of work.
 
 If anything in this file conflicts with the spec documents (`APEX_System_Whiteboard.md` or `APEX_Phase1_ClaudeCode_Spec.md`), the spec documents win. This file is meta-rules, not implementation rules.
+
+## Companion Docs — Read These Too
+
+| File | When to read |
+|---|---|
+| `SESSION_HANDOFF.md` | First, in any new chat session |
+| `PROJECT_STATE.md` | After this file — tells you what's built and what's next |
+| `BACKLOG.md` | Open issues, deferred decisions, known limitations |
+| `APEX_System_Whiteboard.md` | Source of truth for system design |
+| `APEX_Phase1_ClaudeCode_Spec.md` | Source of truth for Phase 1 (already built) |
 
 ---
 
