@@ -32,13 +32,13 @@ APEX is a fully autonomous ICT (Inner Circle Trader) futures trading system writ
 | Spec version | v1.3 (committed) |
 | Current phase | Phase 2 — Market Data Agent: **COMPLETE** |
 | Next phase | Phase 3 — Session Clock + News Scraper: **NOT STARTED** |
-| Next required action | Resolve B-202 (news sources) with user, then author `APEX_Phase3_ClaudeCode_Spec.md` |
+| Next required action | Hand `APEX_Phase3_ClaudeCode_Spec.md` to Claude Code for build |
 | Tests passing | 41 / 41 |
 | Smoke test status | Confirmed passing by user (paper mode, Windows) |
 
-### Blocker Before Phase 3 Spec Authoring
+### Phase 3 Spec
 
-- **B-202** — News scraper sources: user must choose 2–3 sources before the Phase 3 spec can be written. Options: Reuters, Bloomberg, ForexFactory, Investing.com economic calendar.
+`APEX_Phase3_ClaudeCode_Spec.md` is written and committed to `build`. Ready to hand to Claude Code.
 
 ---
 

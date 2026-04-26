@@ -8,7 +8,7 @@
 
 **Phase 1 — Foundation: COMPLETE and AUDITED.**
 **Phase 2 — Market Data Agent: COMPLETE and AUDITED.**
-**Phase 3 — Session Clock + News Scraper: NOT STARTED. Awaiting user go-ahead.**
+**Phase 3 — Session Clock + News Scraper: SPEC WRITTEN. Ready for Claude Code.**
 
 ---
 

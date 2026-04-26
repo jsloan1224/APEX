@@ -44,9 +44,6 @@ Spec says "If schema needs to change, the table is dropped and recreated for now
 ### B-201 — Paper account fills are optimistic
 IBKR paper account simulates fills with idealized assumptions — no slippage, instant fills at limit prices, etc. Phase 7 paper trading will show better results than live trading produces. Phase 11 (live transition) must monitor for slippage degradation. Documented in `CLAUDE.md`.
 
-### B-202 — News scraper sources unspecified
-Phase 3 includes a news scraper but the spec doesn't list specific RSS/web sources. Common choices: Reuters, Bloomberg, ForexFactory, Investing.com economic calendar. User should choose 2–3 sources before Phase 3 begins.
-
 ### B-203 — IBKR market data subscription requirements
 ES/NQ/YM real-time bars require a CME market data subscription on the IBKR account. Paper accounts get delayed data by default. User needs to confirm subscription status before Phase 2 testing — delayed data will work for development but won't give true bar-close behavior.
 
@@ -130,6 +127,9 @@ All resolved in v1.3 commit `2864cbc`.
 - B-005: Bar close time convention. IBKR open time + `timedelta(minutes=timeframe)` internally. UTC ISO 8601 output.
 - B-002 (spec approach): Written fresh, mirroring Phase 1 structure.
 - B-003 (smoke test): Confirmed passing by user — `python main.py` ran successfully on Windows box.
+
+### R-006 — B-202 News scraper sources
+**Resolved 2026-04-26.** User chose ForexFactory as the sole news source. Red-impact (High) USD events only. No secondary source needed. Spec written accordingly in APEX_Phase3_ClaudeCode_Spec.md using the ForexFactory JSON feed (nfs.faireconomy.media).
 
 ### R-005 — Phase 2 Build
 **Resolved 2026-04-26.** Claude Code completed Phase 2 market data agent. 41 tests passing (25 Phase 1 + 8 bar buffer + 8 market data). Four implementation deviations — all audited and accepted:
