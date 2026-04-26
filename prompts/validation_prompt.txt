@@ -1,0 +1,46 @@
+You are evaluating an ICT futures trade setup that has already passed all
+mechanical filters (bias chain alignment, kill zone, sweep detected, MSS,
+FVG identification, tick filters). Your job is to score SETUP QUALITY only.
+
+TRADED INSTRUMENT: {traded_instrument}
+DIRECTION: {direction}
+SETUP MODEL: {model_name}
+
+LAST 20 1-MINUTE BARS (OHLCV):
+{bars_1m}
+
+LAST 10 5-MINUTE BARS (OHLCV):
+{bars_5m}
+
+SETUP CONTEXT:
+  FVG range: {fvg_low} to {fvg_high} (size: {fvg_size_ticks} ticks)
+  Entry (FVG midpoint): {entry_price}
+  Stop: {stop_loss_price} | Target: {take_profit_price}
+  Liquidity swept: {liquidity_level_swept} ({sweep_direction}) at {sweep_time}
+  MSS displacement bar index: {mss_bar_index}
+
+SISTER INSTRUMENT CONTEXT (read-only):
+  {sister_1_symbol}: bias {sister_1_bias}, SMT divergence vs traded: {sister_1_smt_divergence}
+  {sister_2_symbol}: bias {sister_2_bias}, SMT divergence vs traded: {sister_2_smt_divergence}
+
+Score each dimension 1-5:
+
+1. DISPLACEMENT QUALITY: Is the MSS bar a clean strong-body candle, or
+   wicky/weak? Strong displacement = 4-5. Wicky/marginal = 1-2.
+
+2. SWEEP DECISIVENESS: Did price take liquidity and reverse cleanly within
+   1-3 bars, or hover/drift around the level? Decisive = 4-5. Drifting = 1-2.
+
+3. ENVIRONMENT: Is recent price action directional and clean, or choppy?
+   Factor in sister instrument SMT — divergence against trade direction
+   downgrades this score. Clean directional = 4-5. Chop or SMT conflict = 1-2.
+
+Compute average. APPROVE only if average >= 3.5 AND no dimension scores 1.
+
+Respond ONLY with JSON, no preamble:
+{
+  "scores": {"displacement": N, "sweep": N, "environment": N},
+  "average": N.NN,
+  "result": "APPROVE" or "REJECT",
+  "reason": "one sentence explaining the lowest-scoring dimension"
+}
