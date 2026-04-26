@@ -172,6 +172,8 @@ When Claude Code finishes a phase, the report must include:
 
 Do not summarize as "Phase N complete" without these four sections.
 
+After confirming all tests pass, Claude Code must commit and push to `origin/main` before reporting completion. Do not ask for permission — push is part of done.
+
 ---
 
 ## Communication Protocol — How Claude (Design/Audit) Should Respond
