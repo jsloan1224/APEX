@@ -14,11 +14,15 @@ Replace the placeholder PAT with a fresh one from your jsloan1224 GitHub account
 APEX project bootstrap.
 
 Repo: https://github.com/jsloan1224/APEX
+Working branch: build  (never push to main)
 
 Clone with this PAT:
 <YOUR_GITHUB_PAT_HERE>
 
-After cloning, read these files in order before doing anything else:
+After cloning, check out the build branch:
+  git checkout build
+
+Then read these files in order before doing anything else:
 1. SESSION_HANDOFF.md  (entry point — points to the rest)
 2. CLAUDE.md           (rules of engagement)
 3. PROJECT_STATE.md    (what's built, what's next)

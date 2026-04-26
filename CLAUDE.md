@@ -182,7 +182,7 @@ When Claude Code finishes a phase, the report must include:
 
 Do not summarize as "Phase N complete" without these four sections.
 
-After confirming all tests pass, Claude Code must commit and push to `origin/main` before reporting completion. Do not ask for permission — push is part of done.
+After confirming all tests pass, Claude Code must commit and push to `origin/build` before reporting completion. Do not ask for permission — push is part of done. Never push to `main`.
 
 ---
 
@@ -231,11 +231,20 @@ These are real, not hidden. If they become problems, surface them; don't gloss.
 
 ---
 
-## Repo URL
+## Repo URL and Branch Strategy
 
 `https://github.com/jsloan1224/APEX`
 
-Clone, branch, commit, push as normal git workflow. Force-push only with explicit user instruction.
+**Two branches:**
+| Branch | Purpose |
+|---|---|
+| `main` | Stable. Contains completed, audited phases only. |
+| `build` | Working branch. All Claude Code development happens here. |
+
+**Rules:**
+- Claude Code always works on `build`. Never push directly to `main`.
+- After a phase passes audit, the user merges `build` → `main` via pull request.
+- Force-push only with explicit user instruction.
 
 ---
 

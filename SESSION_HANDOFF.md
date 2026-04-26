@@ -155,6 +155,7 @@ APEX/
 
 - User runs Claude Code locally on Windows
 - Repo: `https://github.com/jsloan1224/APEX`
+- Branch strategy: `build` is the working branch — all Claude Code pushes go to `build`. Merges to `main` happen after each phase passes audit.
 - User uses fine-grained PATs from the `jsloan1224` GitHub account for pushes (regenerated per session)
 - Anthropic API key not yet placed in `.env`
 - IBKR TWS not yet confirmed running on user's machine
